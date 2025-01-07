@@ -7,6 +7,7 @@ const ThreeBox: React.FC = () => {
 	const isDragging = useRef(false);
 	const lastMousePosition = useRef({ x:0, y:0 });
 	const rotationRef = useRef({ x:0, y:0 });//current rotation
+	const defaultRotation = useRef(true);
 /*
 const [labelPositions, setLabelPositions] = useState<
 		{ id: number; x: number; y: number; label: string }[]
@@ -48,9 +49,15 @@ const [labelPositions, setLabelPositions] = useState<
 
 		//add ground
 		const gridHelper = new THREE.GridHelper(600);
-		staticGroup.add(gridHelper);//scene.add
+		if (defaultRotation)
+			scene.add(gridHelper);
+		else
+			staticGroup.add(gridHelper);//scene.add
 		const axesHelper = new THREE.AxesHelper(400);
-		staticGroup.add(axesHelper);//scene.add
+		if (defaultRotation)
+			scene.add(axesHelper);
+		else
+			staticGroup.add(axesHelper);//scene.add
 
 		const sphereGroup = new THREE.Group();
 		const lineGroup = new THREE.Group();
@@ -128,6 +135,8 @@ const [labelPositions, setLabelPositions] = useState<
 		updateLabelPositions();
 */
 		const handleMouseDown = (event: MouseEvent) => {
+			defaultRotation.current = false;
+			rotationRef.current.y = staticGroup.rotation.y;
 			isDragging.current = true;
 			lastMousePosition.current = { x: event.clientX, y: event.clientY };
 		};
@@ -149,6 +158,8 @@ const [labelPositions, setLabelPositions] = useState<
 		}
 
 		const handleWheel = (event: WheelEvent) => {
+			defaultRotation.current = false;
+			rotationRef.current.y = staticGroup.rotation.y;
 			event.preventDefault();
 
 			const zoomSpeed = 1;
@@ -162,8 +173,6 @@ const [labelPositions, setLabelPositions] = useState<
 
 			const zoomDistance = delta;
 			camera.position.add(direction.multiplyScalar(zoomDistance));
-
-			//camera.position.z = Math.max(100, Math.min(1000, camera.position.z));
 		};
 
 		window.addEventListener("mousedown", handleMouseDown);
@@ -175,14 +184,16 @@ const [labelPositions, setLabelPositions] = useState<
 
 		// 毎フレーム時に実行されるループイベント
 		const tick = () => {
-/*
+
 			//rotation mode, comment out mouserotation 2 lines below and put grounds from staticGroup to scene
-			const time = 0.005;
-			staticGroup.rotation.x += time;
-			staticGroup.rotation.y += time;
-*/
-			staticGroup.rotation.x = rotationRef.current.x;
-			staticGroup.rotation.y = rotationRef.current.y;
+			if (defaultRotation.current) {
+				const time = 0.003;
+				staticGroup.rotation.y += time;
+			}
+			else {
+				staticGroup.rotation.x = rotationRef.current.x;
+				staticGroup.rotation.y = rotationRef.current.y;
+			}
 
 			//updateLabelPositions();
 			// レンダリング
