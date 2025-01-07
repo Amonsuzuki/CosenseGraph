@@ -74,7 +74,7 @@ const categories = [
 			staticGroup.add(axesHelper);//scene.add
 
 		const sphereGroup = new THREE.Group();
-		const lineGroup = new THREE.Group();
+		//const lineGroup = new THREE.Group();
 
 		const createLabel = (text: string, category:string) => {
 			const canvas = document.createElement("canvas");
@@ -112,21 +112,21 @@ const categories = [
 
 			sphere.position.set(item.x * 400, item.y * 400, item.z * 400);
 			sphereGroup.add(sphere);
-
+/*
 			const lineGeometry = new THREE.BufferGeometry().setFromPoints([
 				new THREE.Vector3(0, 0, 0),
 				new THREE.Vector3(item.x * 400, item.y * 400, item.z * 400),
 			]);
 			const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
 			const line = new THREE.Line(lineGeometry, lineMaterial);
-			//lineGroup.add(line);
-
+			lineGroup.add(line);
+*/
 			const label = createLabel(item.text, item.category);
 			label.position.copy(sphere.position).add(new THREE.Vector3(0, 20, 0));
 			sphereGroup.add(label);
 			});
 		staticGroup.add(sphereGroup);
-		staticGroup.add(lineGroup);
+		//staticGroup.add(lineGroup);
 /*
 		const updateLabelPositions = () => {
 			console.log("label update");
