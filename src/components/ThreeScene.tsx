@@ -119,7 +119,7 @@ const categories = [
 			]);
 			const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
 			const line = new THREE.Line(lineGeometry, lineMaterial);
-			lineGroup.add(line);
+			//lineGroup.add(line);
 
 			const label = createLabel(item.text, item.category);
 			label.position.copy(sphere.position).add(new THREE.Vector3(0, 20, 0));
