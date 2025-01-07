@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import data from '../data/reduced_data.json';
 
@@ -81,7 +81,7 @@ const [labelPositions, setLabelPositions] = useState<
 		}
 
 
-		data.forEach((item, index) => {
+		data.forEach((item) => {
 			const material = new THREE.MeshNormalMaterial();
 			const geometry = new THREE.SphereGeometry(10, 30, 30);
 			const sphere = new THREE.Mesh(geometry, material);
