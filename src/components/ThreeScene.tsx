@@ -13,6 +13,20 @@ const [labelPositions, setLabelPositions] = useState<
 		{ id: number; x: number; y: number; label: string }[]
 	>([]);
 */
+
+const categories = [
+	{ name: "What I use", color: "#00FFFF" },
+	{ name: "Who I respect", color: "#FFD700" },
+	{ name: "Project1", color: "#FF4500" },
+	{ name: "Project2", color: "#7CFC00" },
+	{ name: "Project3", color: "#FF1493" },
+	{ name: "Interests", color: "#1E90FF" },
+	{ name: "Organization", color: "#32CD32" },
+	{ name: "Companies I like", color: "#FF6347" },
+	{ name: "Hobbies", color: "#9370DB" },
+	{ name: "Important things", color: "#FFFFFF" },
+];
+
 	useEffect(() => {
 		if (!canvasRef.current) return;
 
@@ -62,7 +76,7 @@ const [labelPositions, setLabelPositions] = useState<
 		const sphereGroup = new THREE.Group();
 		const lineGroup = new THREE.Group();
 
-		const createLabel = (text: string) => {
+		const createLabel = (text: string, category:string) => {
 			const canvas = document.createElement("canvas");
 			canvas.width = 1024;
 			canvas.height = 256;
@@ -70,7 +84,10 @@ const [labelPositions, setLabelPositions] = useState<
 			const context = canvas.getContext("2d")!;
 			context.clearRect(0, 0, canvas.width, canvas.height);
 			context.font = "30px sans-serif";
-			context.fillStyle = "white";
+			for (let i = 0; i < categories.length; i++) {
+				if (category == categories[i].name)
+					context.fillStyle = categories[i].color;
+			}
 			context.fillText(text, canvas.width / 2 - 80, canvas.height / 2 + 50);
 
 			const texture = new THREE.CanvasTexture(canvas);
@@ -104,7 +121,7 @@ const [labelPositions, setLabelPositions] = useState<
 			const line = new THREE.Line(lineGeometry, lineMaterial);
 			lineGroup.add(line);
 
-			const label = createLabel(item.text);
+			const label = createLabel(item.text, item.category);
 			label.position.copy(sphere.position).add(new THREE.Vector3(0, 20, 0));
 			sphereGroup.add(label);
 			});
@@ -236,6 +253,35 @@ const [labelPositions, setLabelPositions] = useState<
 			zIndex: 0,
 		}}
 		/>
+		<div
+		style={{
+		position: "absolute",
+		top: "10px",
+		right: "10px",
+		zIndex: 1,
+		backgroundColor: "rgba(0, 0, 0, 0.5)",
+		color: "white",
+		padding: "10px",
+		borderRadius: "8px",
+		}}
+		>
+		<ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
+		{categories.map((category) => (
+		<li key={category.name} style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
+		<span
+		style={{
+			display: "inline-block",
+			width: "16px",
+			height: "16px",
+			backgroundColor: category.color,
+			marginRight: "8px",
+			}}
+			></span>
+			<span>{category.name}</span>
+			</li>
+			))}
+			</ul>
+			</div>
 	</div>
 	);
 };
