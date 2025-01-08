@@ -39,4 +39,3 @@ Each node links directly to its original Cosense (Scrapbox) page.
 4. `npm run dev` を実行します  
 
 **注意：** 必要なライブラリのインストールを忘れずに！
-
