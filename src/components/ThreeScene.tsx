@@ -332,7 +332,7 @@ const [labelPositions, setLabelPositions] = useState<
 			window.removeEventListener("mousemove", handleMouseMove);
 			window.removeEventListener("mouseup", handleMouseUp);
 			window.removeEventListener("wheel", handleWheel);
-			canvasRef.current.addEventListener("mousemove", handleHover);
+			canvasRef.current.removeEventListener("mousemove", handleHover);
 			window.removeEventListener("resize", resizeRenderer);
 			renderer.dispose();
 		};
