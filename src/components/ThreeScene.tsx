@@ -208,7 +208,7 @@ const [labelPositions, setLabelPositions] = useState<
 
 		const sphereGroup = new THREE.Group();
 		const lineGroup = new THREE.Group();
-		const nodeMap = {};
+		const nodeMap: { [key: string]: THREE.Vector3 } = {};
 
 		data.nodes.forEach((node) => {
 			const material = new THREE.MeshNormalMaterial();
