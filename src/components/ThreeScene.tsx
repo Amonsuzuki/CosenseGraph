@@ -33,7 +33,8 @@ const [labelPositions, setLabelPositions] = useState<
 	];
 
 	useEffect(() => {
-		if (!canvasRef.current) return;
+		const canvasVar = canvasRef.current;
+		if (!canvasVar) return;
 
 		// レンダラーの初期設定
 		const renderer = new THREE.WebGLRenderer({
@@ -332,7 +333,7 @@ const [labelPositions, setLabelPositions] = useState<
 			window.removeEventListener("mousemove", handleMouseMove);
 			window.removeEventListener("mouseup", handleMouseUp);
 			window.removeEventListener("wheel", handleWheel);
-			canvasRef.current.removeEventListener("mousemove", handleHover);
+			canvasVar.removeEventListener("mousemove", handleHover);
 			window.removeEventListener("resize", resizeRenderer);
 			renderer.dispose();
 		};
