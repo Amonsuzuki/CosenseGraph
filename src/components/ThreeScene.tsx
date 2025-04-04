@@ -36,7 +36,7 @@ const [labelPositions, setLabelPositions] = useState<
 		const canvasVar = canvasRef.current;
 		if (!canvasVar) return;
 
-		if (!canvas) return;
+		if (!canvasRef.current) return;
 
 		// レンダラーの初期設定
 		const renderer = new THREE.WebGLRenderer({
