@@ -6,6 +6,9 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '../../.env' });
 
 const projectName = process.env.NEXT_PUBLIC_PROJECT_NAME;
+import data from '../data/3.json';
+
+const projectName = "hankyusyoki";
 
 const ThreeBox: React.FC = () => {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -40,6 +43,18 @@ const [labelPositions, setLabelPositions] = useState<
 	const categories = generateCategoryColors();
 	const categoryColorMap = new Map<string, string>();
 	categories.forEach(({ name, color }) => categoryColorMap.set(name, color));
+	const categories = [
+		{ name: "実", color: "#00FFFF" },
+		{ name: "A", color: "#FFD700" },
+		{ name: "B", color: "#FF4500" },
+		{ name: "デ", color: "#7CFC00" },
+		{ name: "回", color: "#FF1493" },
+		{ name: "磁", color: "#1E90FF" },
+		{ name: "英", color: "#32CD32" },
+		{ name: "核", color: "#FF6347" },
+		{ name: "序", color: "#9370DB" },
+		{ name: "その他", color: "#FFFFFF" },
+	];
 
 	useEffect(() => {
 		const canvasVar = canvasRef.current;
@@ -182,6 +197,27 @@ const [labelPositions, setLabelPositions] = useState<
 				radius = 1 + 0.1 * count;
 			else
 				radius = 1 + 50
+		const linkCounts: { [key: string]: number } = {};
+		data.links.forEach((link) => {
+			if (link.source in linkCounts) {
+				linkCounts[link.source] += 1;
+			}
+			else
+				linkCounts[link.source] = 1;
+		});
+
+		const sphereGroup = new THREE.Group();
+		const lineGroup = new THREE.Group();
+		const nodeMap = {};
+
+		data.nodes.forEach((node) => {
+			const material = new THREE.MeshNormalMaterial();
+			const count = linkCounts[node.text] || 0;
+			let radius
+			if (count < 50)
+				radius = 10 + 2 * count;
+			else
+				radius = 10 + 100
 			const geometry = new THREE.SphereGeometry(radius, 30, 30);
 			const sphere = new THREE.Mesh(geometry, material);
 
@@ -193,12 +229,15 @@ const [labelPositions, setLabelPositions] = useState<
 			sphere.userData.label = node.text;
 			sphereGroup.add(sphere);
 /*
+			sphereGroup.add(sphere);
+
 			const label = createLabel(node.text, node.category);
 			label.position.copy(sphere.position).add(new THREE.Vector3(0, 20, 0));
 			label.userData.url = sphere.userData.url;
 			label.userData.displayUrl = sphere.userData.displayUrl;
 			sphereGroup.add(label);
 */
+
 			nodeMap[node.text] = pos;
 		});
 
@@ -241,6 +280,9 @@ const [labelPositions, setLabelPositions] = useState<
 					if (!edgeMap.has(targetSphere)) edgeMap.set(targetSphere, []);
 					edgeMap.get(targetSphere)!.push(line);
 				}
+				const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+				const line = new THREE.Line(lineGeometry, lineMaterial);
+				lineGroup.add(line)
 			}
 		});
 		staticGroup.add(sphereGroup);
@@ -400,6 +442,8 @@ const [labelPositions, setLabelPositions] = useState<
 					neighborOverlays.push({ overlay, node: neighborInfo.node });
 				});
 /*
+			if (intersects.length > 0) {
+				const obj = intersects[0].object;
 				if (obj.userData.url && urlDisplay) {
 					urlDisplay.style.display = "block";
 					urlDisplay.style.left = event.clientX + 10 + "px";
@@ -422,6 +466,8 @@ const [labelPositions, setLabelPositions] = useState<
 						const mat = line.material as THREE.LineBasicMaterial;
 						mat.opacity = 1.0;
 					});
+					urlDisplay.innerText = obj.userData.displayUrl;
+					document.body.style.cursor = "pointer";
 				}
 			}
 			else {
@@ -537,6 +583,8 @@ const [labelPositions, setLabelPositions] = useState<
 			neighborOverlays.forEach(info => {
 				document.body.removeChild(info.overlay);
 			});
+			canvasRef.current.addEventListener("mousemove", handleHover);
+			window.removeEventListener("resize", resizeRenderer);
 			renderer.dispose();
 		}
 	}, []);
