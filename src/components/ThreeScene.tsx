@@ -1,9 +1,11 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import data from '../data/data.json';
+import dotenv from 'dotenv';
 
-//汎化
-const projectName = "mitou-meikan";
+dotenv.config({ path: '../../.env' });
+
+const projectName = process.env.NEXT_PUBLIC_PROJECT_NAME;
 
 const ThreeBox: React.FC = () => {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -54,6 +56,9 @@ const [labelPositions, setLabelPositions] = useState<
 		let neighborOverlays: OverlayInfo[] = [];
 		type NeighborInfo = { node: THREE.Object3D; position: THREE.Vector3 };
 		const neighborMap = new Map<THREE.Object3D, NeighborInfo[]>();
+
+		let hasDragged = false;
+		const DRAG_THRESHOLD = 1;
 
 		// レンダラーの初期設定
 		const renderer = new THREE.WebGLRenderer({
@@ -185,6 +190,7 @@ const [labelPositions, setLabelPositions] = useState<
 			sphere.position.copy(pos);
 			sphere.userData.url = `https://scrapbox.io/${projectName}/${encodeURIComponent(node.text)}`;
 			sphere.userData.displayUrl = `https://scrapbox.io/${projectName}/${node.text}`;
+			sphere.userData.label = node.text;
 			sphereGroup.add(sphere);
 /*
 			const label = createLabel(node.text, node.category);
@@ -290,6 +296,9 @@ const [labelPositions, setLabelPositions] = useState<
 */
 
 		const clickURL = (event: MouseEvent) => {
+			if (hasDragged) {
+				return;
+			}
 			mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
 			mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 			raycaster.setFromCamera(mouse, camera);
@@ -385,7 +394,7 @@ const [labelPositions, setLabelPositions] = useState<
 					overlay.style.borderRadius = "3px";
 					overlay.style.pointerEvents = "none";
 
-					overlay.innerText = neighborInfo.node.userData.displayUrl;
+					overlay.innerText = neighborInfo.node.userData.label;
 
 					document.body.appendChild(overlay);
 					neighborOverlays.push({ overlay, node: neighborInfo.node });
@@ -426,6 +435,7 @@ const [labelPositions, setLabelPositions] = useState<
 			defaultRotation.current = false;
 			rotationRef.current.y = staticGroup.rotation.y;
 			isDragging.current = true;
+			hasDragged = false;
 			lastMousePosition.current = { x: event.clientX, y: event.clientY };
 		};
 
@@ -434,7 +444,9 @@ const [labelPositions, setLabelPositions] = useState<
 				return;
 			const deltaX = event.clientX - lastMousePosition.current.x;
 			const deltaY = event.clientY - lastMousePosition.current.y;
-			
+			if (Math.hypot(deltaX, deltaY) > DRAG_THRESHOLD) {
+				hasDragged = true;
+			}
 			rotationRef.current.x += deltaY * 0.01;
 			rotationRef.current.y += deltaX * 0.01;
 

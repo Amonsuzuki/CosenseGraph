@@ -2,6 +2,7 @@ import requests
 import time
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 from openai import OpenAI
 import numpy as np
 from sklearn.preprocessing import normalize
@@ -13,7 +14,8 @@ import json
 
 OUTPUT_FILE = "data.json"
 
-load_dotenv()
+env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def get_project_info(project):
