@@ -14,7 +14,7 @@ import json
 
 OUTPUT_FILE = "data.json"
 
-env_path = Path(__file__).resolve().parent.parent / ".env"
+env_path = Path(__file__).resolve().parents[2] / ".env"
 load_dotenv(dotenv_path=env_path)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
