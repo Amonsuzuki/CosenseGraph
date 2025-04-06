@@ -584,6 +584,7 @@ const [labelPositions, setLabelPositions] = useState<
 				document.body.removeChild(info.overlay);
 			});
 			canvasRef.current.addEventListener("mousemove", handleHover);
+			canvasRef.current.removeEventListener("mousemove", handleHover);
 			window.removeEventListener("resize", resizeRenderer);
 			renderer.dispose();
 		}
