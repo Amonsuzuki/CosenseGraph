@@ -333,7 +333,7 @@ const [labelPositions, setLabelPositions] = useState<
 
 			lineGroup.children.forEach(line => {
 				if ((line as THREE.Line).material instanceof THREE.LineBasicMaterial) {
-					(line as THREE.Line).material.opacity = defaultLineOpacity;
+					((line as THREE.Line).material as THREE.LineBasicMaterial).opacity = defaultLineOpacity;
 				}
 			});
 
