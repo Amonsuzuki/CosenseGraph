@@ -61,6 +61,7 @@ const [labelPositions, setLabelPositions] = useState<
 		if (!canvasVar) return;
 
 		if (!canvasRef.current) return;
+<<<<<<< HEAD
 
 		const edgeMap = new Map<THREE.Object3D, THREE.Line[]>();
 		const defaultLineOpacity = 0.1;
@@ -75,6 +76,8 @@ const [labelPositions, setLabelPositions] = useState<
 		let hasDragged = false;
 		const DRAG_THRESHOLD = 1;
 		if (!canvas) return;
+=======
+>>>>>>> aa04de7 ()
 
 		// レンダラーの初期設定
 		const renderer = new THREE.WebGLRenderer({
