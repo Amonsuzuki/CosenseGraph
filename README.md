@@ -2,7 +2,9 @@
 A novel 3D visualization tool for *Cosense (formerly Scrapbox)*.  
 Page titles are represented as nodes, and page links are visualized as edges.
 
-*Cosense (formerly Scrapbox)*のページ関係を可視化するためのツールです。
+*Cosense (formerly Scrapbox)*のページ関係を可視化するためのツールです。  
+https://cosense-graph.vercel.app/
+![image](https://github.com/user-attachments/assets/842bb70b-ab96-4772-81ce-d28ac1b7398a)
 
 # Features
 
