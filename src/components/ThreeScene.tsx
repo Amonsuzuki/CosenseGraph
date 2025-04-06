@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import data from '../data/3.json';
 
+//汎化
 const projectName = "hankyusyoki";
 
 const ThreeBox: React.FC = () => {
@@ -19,6 +20,7 @@ const [labelPositions, setLabelPositions] = useState<
 	>([]);
 */
 
+//汎化
 	const categories = [
 		{ name: "実", color: "#00FFFF" },
 		{ name: "A", color: "#FFD700" },
@@ -124,7 +126,7 @@ const [labelPositions, setLabelPositions] = useState<
 
 		data.nodes.forEach((node) => {
 			const material = new THREE.MeshNormalMaterial();
-			const count = linkCounts[node.text] || 0;
+			const count = linkCounts[node.title] || 0;
 			let radius
 			if (count < 50)
 				radius = 10 + 2 * count;
@@ -136,17 +138,17 @@ const [labelPositions, setLabelPositions] = useState<
 			const pos = new THREE.Vector3(node.x * 400, node.y * 400, node.z * 400);
 
 			sphere.position.copy(pos);
-			sphere.userData.url = `https://scrapbox.io/${projectName}/${encodeURIComponent(node.text)}`;
-			sphere.userData.displayUrl = `https://scrapbox.io/${projectName}/${node.text}`;
+			sphere.userData.url = `https://scrapbox.io/${projectName}/${encodeURIComponent(node.title)}`;
+			sphere.userData.displayUrl = `https://scrapbox.io/${projectName}/${node.title}`;
 			sphereGroup.add(sphere);
 
-			const label = createLabel(node.text, node.category);
+			const label = createLabel(node.title, node.category);
 			label.position.copy(sphere.position).add(new THREE.Vector3(0, 20, 0));
 			label.userData.url = sphere.userData.url;
 			label.userData.displayUrl = sphere.userData.displayUrl;
 			sphereGroup.add(label);
 
-			nodeMap[node.text] = pos;
+			nodeMap[node.title] = pos;
 		});
 
 		data.links.forEach((link) => {
@@ -181,7 +183,7 @@ const [labelPositions, setLabelPositions] = useState<
 			const line = new THREE.Line(lineGeometry, lineMaterial);
 			lineGroup.add(line);
 
-			const label = createLabel(item.text, item.category);
+			const label = createLabel(item.title, item.category);
 			label.position.copy(sphere.position).add(new THREE.Vector3(0, 20, 0));
 			sphereGroup.add(label);
 			});
@@ -205,7 +207,7 @@ const [labelPositions, setLabelPositions] = useState<
 					id: index,
 					x: sx,
 					y: sy,
-					label: `${item.text}`,
+					label: `${item.title}`,
 				};
 			});
 			setLabelPositions(positions);
