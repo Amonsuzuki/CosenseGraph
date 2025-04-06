@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
-import data from '../data/3.json';
+import data from '../data/data.json';
 
 //汎化
-const projectName = "hankyusyoki";
+const projectName = "mitou-meikan";
 
 const ThreeBox: React.FC = () => {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -20,19 +20,24 @@ const [labelPositions, setLabelPositions] = useState<
 	>([]);
 */
 
-//汎化
-	const categories = [
-		{ name: "実", color: "#00FFFF" },
-		{ name: "A", color: "#FFD700" },
-		{ name: "B", color: "#FF4500" },
-		{ name: "デ", color: "#7CFC00" },
-		{ name: "回", color: "#FF1493" },
-		{ name: "磁", color: "#1E90FF" },
-		{ name: "英", color: "#32CD32" },
-		{ name: "核", color: "#FF6347" },
-		{ name: "序", color: "#9370DB" },
-		{ name: "その他", color: "#FFFFFF" },
-	];
+	const generateCategoryColors = () => {
+		const categorySet = new Set<string>();
+		data.nodes.forEach((node) => categorySet.add(node.category));
+
+		const uniqueCategories = Array.from(categorySet);
+
+		const colorPalette = [
+			"#00FFFF", "#FFD700", "#FF4500", "#7CFC00", "#FF1493", "#1E90FF", "#32CD32", "#FF6347", "#9370DB", "#FF033D"
+		];
+		const generateCategories = uniqueCategories.map((name, index) => ({
+			name,
+			color: colorPalette[index % colorPalette.length]
+		}));
+		return generateCategories;
+	}
+	const categories = generateCategoryColors();
+	const categoryColorMap = new Map<string, string>();
+	categories.forEach(({ name, color }) => categoryColorMap.set(name, color));
 
 	useEffect(() => {
 		const canvasVar = canvasRef.current;
@@ -40,14 +45,44 @@ const [labelPositions, setLabelPositions] = useState<
 
 		if (!canvasRef.current) return;
 
+		const edgeMap = new Map<THREE.Object3D, THREE.Line[]>();
+		const defaultLineOpacity = 0.1;
+		let outlineMesh: THREE.Mesh | null = null;
+		let previouslyHoveredSphere: THREE.Mesh | null = null;
+
+		type OverlayInfo = { overlay: HTMLDivElement, node: THREE.Object3D };
+		let neighborOverlays: OverlayInfo[] = [];
+		type NeighborInfo = { node: THREE.Object3D; position: THREE.Vector3 };
+		const neighborMap = new Map<THREE.Object3D, NeighborInfo[]>();
+
 		// レンダラーの初期設定
 		const renderer = new THREE.WebGLRenderer({
-			canvas: canvasRef.current,
+			canvas: canvasVar,
 		});
 		renderer.setPixelRatio(window.devicePixelRatio);
 
 		// シーンを作成
 		const scene = new THREE.Scene();
+		const ambientLight = new THREE.AmbientLight(0xffffff, 5.0);
+		scene.add(ambientLight);
+		const directionalLight = new THREE.DirectionalLight(0xffffff, 10.0);
+		directionalLight.position.set(300, 100, 300);
+		scene.add(directionalLight);
+		scene.fog = new THREE.Fog(0x111111, 400, 1500);
+/*
+		const floorGeometry = new THREE.PlaneGeometry(2000, 2000);
+		const floorMaterial = new THREE.MeshStandardMaterial({
+			color: 0x222222,
+			metalness: 0.6,
+			roughness: 0.1,
+			envMapIntensity: 1.0
+		});
+		const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+		floor.rotation.x = -Math.PI / 2;
+		floor.position.y = -100;
+		floor.receiveShadow = true;
+		scene.add(floor);
+*/
 
 		// カメラを作成
 		const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight);
@@ -70,7 +105,8 @@ const [labelPositions, setLabelPositions] = useState<
 		//all objects here 
 		const staticGroup = new THREE.Group();
 		scene.add(staticGroup);
-
+		staticGroup.scale.set(1.5, 1.5, 1.5);
+/*
 		//add ground
 		const gridHelper = new THREE.GridHelper(600);
 		if (defaultRotation)
@@ -85,8 +121,10 @@ const [labelPositions, setLabelPositions] = useState<
 
 		const createLabel = (text: string, category:string) => {
 			const canvas = document.createElement("canvas");
-			canvas.width = 1024;
-			canvas.height = 256;
+			//canvas.width = 1024;
+			//canvas.height = 256;
+			canvas.width = 512;
+			canvas.height = 128;
 
 			const context = canvas.getContext("2d")!;
 			context.clearRect(0, 0, canvas.width, canvas.height);
@@ -110,7 +148,7 @@ const [labelPositions, setLabelPositions] = useState<
 
 			return sprite;
 		}
-
+*/
 		const linkCounts: { [key: string]: number } = {};
 		data.links.forEach((link) => {
 			if (link.source in linkCounts) {
@@ -125,30 +163,37 @@ const [labelPositions, setLabelPositions] = useState<
 		const nodeMap: { [key: string]: THREE.Vector3 } = {};
 
 		data.nodes.forEach((node) => {
-			const material = new THREE.MeshNormalMaterial();
-			const count = linkCounts[node.title] || 0;
+			//const material = new THREE.MeshNormalMaterial();
+			const categoryColor = categoryColorMap.get(node.category) || "#ffffff";
+			const material = new THREE.MeshStandardMaterial({ 
+				color: categoryColor,
+				metalness: 0.8,
+				roughness: 0.2,
+				envMapIntensity: 1.5
+			});
+			const count = linkCounts[node.text] || 0;
 			let radius
-			if (count < 50)
-				radius = 10 + 2 * count;
+			if (count < 500)
+				radius = 1 + 0.1 * count;
 			else
-				radius = 10 + 100
+				radius = 1 + 50
 			const geometry = new THREE.SphereGeometry(radius, 30, 30);
 			const sphere = new THREE.Mesh(geometry, material);
 
 			const pos = new THREE.Vector3(node.x * 400, node.y * 400, node.z * 400);
 
 			sphere.position.copy(pos);
-			sphere.userData.url = `https://scrapbox.io/${projectName}/${encodeURIComponent(node.title)}`;
-			sphere.userData.displayUrl = `https://scrapbox.io/${projectName}/${node.title}`;
+			sphere.userData.url = `https://scrapbox.io/${projectName}/${encodeURIComponent(node.text)}`;
+			sphere.userData.displayUrl = `https://scrapbox.io/${projectName}/${node.text}`;
 			sphereGroup.add(sphere);
-
-			const label = createLabel(node.title, node.category);
+/*
+			const label = createLabel(node.text, node.category);
 			label.position.copy(sphere.position).add(new THREE.Vector3(0, 20, 0));
 			label.userData.url = sphere.userData.url;
 			label.userData.displayUrl = sphere.userData.displayUrl;
 			sphereGroup.add(label);
-
-			nodeMap[node.title] = pos;
+*/
+			nodeMap[node.text] = pos;
 		});
 
 		data.links.forEach((link) => {
@@ -158,9 +203,38 @@ const [labelPositions, setLabelPositions] = useState<
 			if (sourcePos && targetPos) {
 				const points = [sourcePos, targetPos];
 				const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-				const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+				const lineMaterial = new THREE.LineBasicMaterial({ 
+					color: 0xffffff,
+					transparent: true,
+					opacity: defaultLineOpacity
+					});
 				const line = new THREE.Line(lineGeometry, lineMaterial);
 				lineGroup.add(line)
+
+				const sourceSphere = sphereGroup.children.find(o => o.userData.displayUrl?.endsWith(link.source));
+				const targetSphere = sphereGroup.children.find(o => o.userData.displayUrl?.endsWith(link.target));
+				if (sourceSphere && targetSphere) {
+					const sourceWorldPos = new THREE.Vector3();
+					sourceSphere.getWorldPosition(sourceWorldPos);
+					const targetWorldPos = new THREE.Vector3();
+					targetSphere.getWorldPosition(targetWorldPos);
+					if (!neighborMap.has(sourceSphere)) {
+						neighborMap.set(sourceSphere, []);
+					}
+					neighborMap.get(sourceSphere)!.push({ node: targetSphere, position: targetWorldPos.clone() });
+					if (!neighborMap.has(targetSphere)) {
+						neighborMap.set(targetSphere, []);
+					}
+					neighborMap.get(targetSphere)!.push({ node: sourceSphere, position: sourceWorldPos.clone() });
+				}
+				if (sourceSphere) {
+					if (!edgeMap.has(sourceSphere)) edgeMap.set(sourceSphere, []);
+					edgeMap.get(sourceSphere)!.push(line);
+				}
+				if (targetSphere) {
+					if (!edgeMap.has(targetSphere)) edgeMap.set(targetSphere, []);
+					edgeMap.get(targetSphere)!.push(line);
+				}
 			}
 		});
 		staticGroup.add(sphereGroup);
@@ -183,7 +257,7 @@ const [labelPositions, setLabelPositions] = useState<
 			const line = new THREE.Line(lineGeometry, lineMaterial);
 			lineGroup.add(line);
 
-			const label = createLabel(item.title, item.category);
+			const label = createLabel(item.text, item.category);
 			label.position.copy(sphere.position).add(new THREE.Vector3(0, 20, 0));
 			sphereGroup.add(label);
 			});
@@ -207,7 +281,7 @@ const [labelPositions, setLabelPositions] = useState<
 					id: index,
 					x: sx,
 					y: sy,
-					label: `${item.title}`,
+					label: `${item.text}`,
 				};
 			});
 			setLabelPositions(positions);
@@ -229,6 +303,11 @@ const [labelPositions, setLabelPositions] = useState<
 		};
 
 		const handleHover = (event: MouseEvent) => {
+			neighborOverlays.forEach(info => {
+				document.body.removeChild(info.overlay);
+			});
+			neighborOverlays = [];
+
 			if (isDragging.current)
 				return;
 			mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -239,14 +318,101 @@ const [labelPositions, setLabelPositions] = useState<
 				true
 			);
 			const urlDisplay =  urlDisplayRef.current;
+
+			lineGroup.children.forEach(line => {
+				if ((line as THREE.Line).material instanceof THREE.LineBasicMaterial) {
+					(line as THREE.Line).material.opacity = defaultLineOpacity;
+				}
+			});
+
+			if (outlineMesh) {
+				scene.remove(outlineMesh);
+				outlineMesh.geometry.dispose();
+				(outlineMesh.material as THREE.Material).dispose();
+				outlineMesh = null;
+			}
+
 			if (intersects.length > 0) {
 				const obj = intersects[0].object;
+				if (obj instanceof THREE.Mesh) {
+					const worldPos = new THREE.Vector3();
+					obj.getWorldPosition(worldPos);
+					const worldScale = new THREE.Vector3();
+					obj.getWorldScale(worldScale);
+					const worldQuat = new THREE.Quaternion();
+					obj.getWorldQuaternion(worldQuat);
+
+					const geometry = obj.geometry.clone();
+					const outlineMaterial = new THREE.MeshBasicMaterial({
+						color: 0xffffff,
+						side: THREE.BackSide,
+						depthWrite: false
+					});
+					outlineMesh = new THREE.Mesh(geometry, outlineMaterial);
+					outlineMesh.position.copy(worldPos);
+					outlineMesh.quaternion.copy(worldQuat);
+					outlineMesh.scale.copy(worldScale).multiplyScalar(1.2);
+					scene.add(outlineMesh);
+
+					previouslyHoveredSphere = obj;
+				}
+			}
+
+			if (intersects.length > 0) {
+				const centerNode = intersects[0].object;
+				if (urlDisplay && centerNode.userData.url) {
+					urlDisplay.style.display = "block";
+					urlDisplay.style.left = event.clientX + 10 + "px";
+					urlDisplay.style.top = event.clientY + 10 + "px";
+					urlDisplay.innerText = centerNode.userData.displayUrl;
+					document.body.style.cursor = "pointer";
+				}
+
+				const neighbors = neighborMap.get(centerNode) || [];
+				neighbors.forEach((neighborInfo) => {
+					/*
+					const worldPos = neighborInfo.position.clone();
+					worldPos.project(camera);
+					const screenX = (worldPos.x + 1) / 2 * window.innerWidth;
+					const screenY = (-worldPos.y + 1) / 2 * window.innerHeight;
+					*/
+					const overlay = document.createElement("div");
+					overlay.style.position = "fixed";
+					overlay.style.padding = "3px 5px";
+					overlay.style.background = "rgba(0, 0, 0, 0.7)";
+					overlay.style.color = "#fff";
+					overlay.style.fontSize = "10px";
+					overlay.style.borderRadius = "3px";
+					overlay.style.pointerEvents = "none";
+
+					overlay.innerText = neighborInfo.node.userData.displayUrl;
+
+					document.body.appendChild(overlay);
+					neighborOverlays.push({ overlay, node: neighborInfo.node });
+				});
+/*
 				if (obj.userData.url && urlDisplay) {
 					urlDisplay.style.display = "block";
 					urlDisplay.style.left = event.clientX + 10 + "px";
 					urlDisplay.style.top = event.clientY + 10 + "px";
-					urlDisplay.innerText = obj.userData.displayUrl;
+					const neighbors = neighborMap.get(obj);
+					if (neighbors && neighbors.length > 0) {
+						const neighborURLs = neighbors
+							.map(neighbor => neighbor.userData.displayUrl)
+							.filter(url => url)
+							.join("\n");
+						urlDisplay.innerText = neighborURLs;
+					} else {
+						urlDisplay.innerText = obj.userData.displayUrl;
+					}
 					document.body.style.cursor = "pointer";
+				}*/
+				const lines = edgeMap.get(centerNode);
+				if (lines) {
+					lines.forEach((line) => {
+						const mat = line.material as THREE.LineBasicMaterial;
+						mat.opacity = 1.0;
+					});
 				}
 			}
 			else {
@@ -312,13 +478,30 @@ const [labelPositions, setLabelPositions] = useState<
 
 			//rotation mode, comment out mouserotation 2 lines below and put grounds from staticGroup to scene
 			if (defaultRotation.current) {
-				const time = 0.003;
+				//const time = 0.003;
+				const time = 0.01;
 				staticGroup.rotation.y += time;
 			}
 			else {
 				staticGroup.rotation.x = rotationRef.current.x;
 				staticGroup.rotation.y = rotationRef.current.y;
 			}
+
+			if (outlineMesh && previouslyHoveredSphere) {
+				const worldPos = new THREE.Vector3();
+				previouslyHoveredSphere.getWorldPosition(worldPos);
+				outlineMesh.position.copy(worldPos);
+			}
+
+			neighborOverlays.forEach(({ overlay, node }) => {
+				const worldPos = new THREE.Vector3();
+				node.getWorldPosition(worldPos);
+				worldPos.project(camera);
+				const screenX = (worldPos.x + 1) / 2 * window.innerWidth;
+				const screenY = (-worldPos.y + 1) / 2 * window.innerHeight;
+				overlay.style.left = `${screenX}px`
+				overlay.style.top = `${screenY}px`
+			});
 
 			//updateLabelPositions();
 			// レンダリング
@@ -339,8 +522,11 @@ const [labelPositions, setLabelPositions] = useState<
 			window.removeEventListener("wheel", handleWheel);
 			canvasVar.removeEventListener("mousemove", handleHover);
 			window.removeEventListener("resize", resizeRenderer);
+			neighborOverlays.forEach(info => {
+				document.body.removeChild(info.overlay);
+			});
 			renderer.dispose();
-		};
+		}
 	}, []);
 
 	return (
