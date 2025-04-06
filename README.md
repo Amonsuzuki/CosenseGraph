@@ -24,7 +24,7 @@ Each node links directly to its original Cosense (Scrapbox) page.
 
 ノード（球）をクリックすると、元のCosense（Scrapbox）ページへ移動できます。
 
-# How to Use / 使い方
+# How to Use
 
 1. Clone this repository  
 2. Set your OpenAI API key in `.env`  
