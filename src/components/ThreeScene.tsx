@@ -74,6 +74,7 @@ const [labelPositions, setLabelPositions] = useState<
 
 		let hasDragged = false;
 		const DRAG_THRESHOLD = 1;
+		if (!canvas) return;
 
 		// レンダラーの初期設定
 		const renderer = new THREE.WebGLRenderer({
